@@ -1,42 +1,33 @@
-package net.by0116;
+package net.by0119;
 
+import javax.swing.*;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ByClient {
-    private Socket socket_client = null;
-    public void sendRequest (int number) throws IOException {
-        System.out.println("客户端发送请求");
-        socket_client = new Socket("localhost",50001);
+    private Socket socket = null;
+    String ip;
+    int port;
+    String name;
+    int ID;
 
+    private ServerSocket serverSocket = null;
+    private ByClientReceiveMsg byClientReceiveMsg = new ByClientReceiveMsg();
 
-        while(true) {
-            InputStream is = socket_client.getInputStream();
-            //收str
-//            String msg = new IOMsg_Str().receiveStr(is);
+    public ByClient(String ip,int port) throws IOException {
+        //登录获取个人信息和读取好友信息
 
-            //收int
-            int msg = new IOMsg_INT().receiveInt(is);
-            System.out.println("server: " + msg);
-//            System.out.println("客户端接收消息结束。");
-//            if(msg.equals("bye"))
-            if(msg==-1)
-                break;
-
-            //客户端回复服务器
-            OutputStream os = socket_client.getOutputStream();
-            String msgBack = "bjt-" + number + " ,Hi。";
-            new IOMsg_Str().SendStr(os, msgBack);
-            System.out.println("bjt: "+msgBack);
-            os.flush();
-            //os.close();
-            //System.out.println("客户端回复结束。");
-        }
+        connect(ip,port);
+        JFrame jFrame = new ByClientUI().initUI("Client-0",socket,"白敬亭",1015,byClientReceiveMsg);
+        while(true)
+            byClientReceiveMsg.receiveMsg(jFrame,socket);
 
     }
-    public static void main(String[] args) throws IOException, InterruptedException {
-        new ByClient().sendRequest(0);
+
+    public Socket connect(String ip , int port) throws IOException {
+        socket = new Socket(ip,port);
+        return socket;
     }
 }
