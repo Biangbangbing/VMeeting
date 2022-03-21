@@ -1,4 +1,4 @@
-package net.by0116;
+package net.by0119;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +24,7 @@ public class IOMsg_INT {
     public void sendInt(OutputStream outputStream,int number) throws IOException {
         int[] buffer = new int[4];
         for(int i=0;i<4;i++) {
-            buffer[i] = (number >> (24 - i * 8)) & 0xff;
+            buffer[i] = (byte) (number >> (24 - i * 8)) & 0xff;
             outputStream.write(buffer[i]);
         }
         //return buffer;
@@ -40,6 +40,7 @@ public class IOMsg_INT {
         int number = 0;
         for(int i=0;i<4;i++)
             number += inputStream.read()<<(24-i*8);
+        System.out.println("读出来的数字："+number);
         return number;
         /*number = 0;
         number += buffer[0]<<24 &0xff;

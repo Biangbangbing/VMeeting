@@ -1,42 +1,98 @@
-package net.by0116;
+package net.by0119;
 
+import javax.swing.*;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ByClient {
-    private Socket socket_client = null;
-    public void sendRequest (int number) throws IOException {
-        System.out.println("客户端发送请求");
-        socket_client = new Socket("localhost",50001);
+    //private Socket socket = null;
+    String ip;
+    int port;
+    ByUser localUser;
+    ByUser targetUser ;
 
+    public void setByUser(ByUser localUser) {
+        this.localUser = localUser;
+    }
 
-        while(true) {
-            InputStream is = socket_client.getInputStream();
-            //收str
-//            String msg = new IOMsg_Str().receiveStr(is);
+    JFrame clientUI ;
+    Socket socket;
 
-            //收int
-            int msg = new IOMsg_INT().receiveInt(is);
-            System.out.println("server: " + msg);
-//            System.out.println("客户端接收消息结束。");
-//            if(msg.equals("bye"))
-            if(msg==-1)
-                break;
+    private ByClientReceiveMsg byClientReceiveMsg = new ByClientReceiveMsg();
 
-            //客户端回复服务器
-            OutputStream os = socket_client.getOutputStream();
-            String msgBack = "bjt-" + number + " ,Hi。";
-            new IOMsg_Str().SendStr(os, msgBack);
-            System.out.println("bjt: "+msgBack);
-            os.flush();
-            //os.close();
-            //System.out.println("客户端回复结束。");
+    public ByClientReceiveMsg getByClientReceiveMsg() {
+        return this.byClientReceiveMsg;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
+    public JFrame getClientUI() {
+        return clientUI;
+    }
+
+    public void setClientUI(JFrame clientUI) {
+        this.clientUI = clientUI;
+    }
+
+    public void setLocalUser(ByUser localUser) {
+        this.localUser = localUser;
+    }
+
+    public void setTargetUser(ByUser targetUser) {
+        this.targetUser = targetUser;
+    }
+
+    public ByUser getLocalUser() {
+        return localUser;
+    }
+
+    public ByUser getTargetUser() {
+        return targetUser;
+    }
+
+    public ByClient(String ip, int port) throws IOException {
+        //先连接服务器以保证正常通信
+        System.out.println("启动客户端。");
+        this.socket = connect(ip,port);
+
+        //登录页面——获取用户信息
+        new ByClientLoginUI().login(this);
+
+        //收消息端登录成功之后会初始化client界面
+
+        //收消息线程启动，其实本身这个客户端就是一个线程，while收消息，但是界面初始化有可能被抢占执行没有初始化完毕，所以另开了一个线程=>待解释
+        byClientReceiveMsg.setSocket(this.socket);
+        byClientReceiveMsg.setByClient(this);
+//        byClientReceiveMsg.setClientUI(this.clientUI);
+
+//        clientUI = new ByClientUI().initUI("Client-0",socket,name,ID,byClientReceiveMsg);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
+        new Thread(){
+            @Override
+            public void run() {
+                while(true) {
+                    try {
+                        byClientReceiveMsg.receiveMsg();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+
     }
-    public static void main(String[] args) throws IOException, InterruptedException {
-        new ByClient().sendRequest(0);
+    public Socket connect(String ip , int port) throws IOException {
+        Socket socket = new Socket(ip,port);
+        return socket;
     }
 }

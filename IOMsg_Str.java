@@ -1,9 +1,8 @@
-package net.by0116;
+package net.by0119;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 
 /**
  * str 类型读写
@@ -30,6 +29,7 @@ public class IOMsg_Str {
         byte[] ByteList_Str= new byte[length];
         inputStream.read(ByteList_Str);
         String result = new String(ByteList_Str);
+        System.out.println("str读出内容为："+result);
         return result;
     }
 }
